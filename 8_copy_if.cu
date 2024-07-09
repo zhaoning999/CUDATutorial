@@ -3,9 +3,11 @@
 #include "cuda_runtime.h"
 #include "cooperative_groups.h"
 //#define THREAD_PER_BLOCK 256
-// 注意：本节视频将会在后面重录，现有视频有很多没有讲清楚的地方
-// 这种warp和shared在老的gpu上面会很有成效，但是在turing后的GPU，nvcc编译器优化了很多，所以导致效果不明显
-// cpu
+// 注意：
+// 1.本节的文字解析放在了CUDA_lesson.pdf，如有不懂，可以先看看文字解析
+// 2.这种warp和shared在老的gpu上面会很有成效，但是在turing后的GPU，nvcc编译器优化了很多，所以导致效果不明显
+// 3.我记得在某个CUDA版本之前，atomic是可以保证block或thread严格按照ID串行，但是某个CUDA版本之后，就不行了，至少在现有流行版本不行了，所以会发现CUDA copy if执行后，虽然全都是>0的值，但是顺序和输入不一样
+// cpu实现
 int filter(int *dst, int *src, int n) {
   int nres = 0;
   for (int i = 0; i < n; i++)
