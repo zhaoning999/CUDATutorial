@@ -5,7 +5,8 @@ typedef __half half;
 typedef __half2 half2;
 // 注意
 // 1. 此融合算子还比较简单，主要融合了几个element wise算子，在L15和L39，把各个子算子的输出保留在寄存器直接喂给下一个算子做计算，而无需中途写回显存
-// 2. 下个版本会新增fusedDropout这个稍微复杂点的融合算子，来进一步体会融合算子的开发方法，总的来说，和本节融合算子的思想一样
+// 2. 难一点的融合算子可以见fusedDropout，来进一步体会融合算子的开发方法，总的来说，和本节融合算子的思想一样
+// 3. 此例子目前不能跑，正在fix
 template<typename T>
 struct MaskScaleAndElementwiseAddFunctor {
   MaskScaleAndElementwiseAddFunctor(const uint8_t* mask, const T* add_val, float scale)

@@ -24,15 +24,17 @@ struct MaskScaleAndElemwiseAddFunctor
     const T * _add_val;
     float _scale;
 };
-
+// 朴素写法：和视频上的一致
 template<int biasSize, typename FUNCTOR, typename T>
 __global__ void FusedBaisAdd(FUNCTOR functor, T * dx, T * dy, T * d_bias, const int n, const int bias_size)
 {
     int gid = blockDim.x * blockIdx.x + threadIdx.x;
-
+    // 对比于59行的读向量，此处读标量，总数为元素个数n
     for (int i = gid; i < n; i += gridDim.x * blockDim.x)
     {
+        // 先加上bias
         T tmp = dx[i] + d_bias[i % bias_size];
+        // 再做mask+scale+elementwiseadd
         dy[i] = functor(tmp, i);
     }
 }
@@ -47,10 +49,11 @@ __global__ void FusedBaisAddVecSmem(FUNCTOR functor, T * dx, T * dy, T * d_bias,
     __shared__ T smem[biasSize];
 
     // 将d_bias放在shared memory上
+    // 原因: d_bias在62-65行通过除余bias_size被多次读取复用，所以放在shared memory上
     if (tid < bias_size)
         smem[tid] = d_bias[tid];
     __syncthreads();
-
+    // float4向量化读取，此时1个线程读取4个数，因此需要读取的向量总数为n/4
     for (int i = gid; i < n / 4; i += gridDim.x * blockDim.x)
     {
         float4 a = reinterpret_cast<float4 *>(dx)[i];
